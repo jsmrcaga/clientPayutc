@@ -83,8 +83,11 @@ var payutcAPI = {
 
 
 	genericApiCall: function(service, method, data, callback) {
-		this.verifySession();
-		var url = this.config.url + service + "/" + method + "?system_id=" + this.config.systemID + "&sessionid=" + this.config.sessionID + "&app_key=" + this.config.app_key;
+		// this.verifySession();
+		var url = this.config.url + service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
+		if (this.config.sessionID){
+			url += "&sessionid=" + this.config.sessionID;
+		}
 		var xml = new XMLHttpRequest();
 		
 		xml.onreadystatechange = function(){
@@ -157,6 +160,22 @@ var payutc = {
 			payutcAPI.config.fun_id = funId;
 		}
 
+	},
+
+	login: {
+		cas: function(service, ticket){
+			return payutcAPI.genericApiCall("GESARTICLE", "loginCas", {service: service, ticket:ticket});
+		},
+
+		payuser: function(login, password){
+
+			var resp = JSON.parse(payutcAPI.genericApiCall("GESARTICLE", "login2", {login: login, password: password}));
+			if (typeof resp.sessionid != "undefined"){
+				payutcAPI.config.sessionID = resp.sessionid;
+				payutcAPI.config.logged_usr = resp.username;
+				console.log("Logged user successfully:", payutcAPI.config.logged_usr);
+			}
+		}
 	},
 
 	stats: {
