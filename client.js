@@ -32,9 +32,11 @@ function timeInSQL () {
 	}
 	today = yyyy+'-'+mm+'-'+dd+' '+hrs+':'+min+':'+sec;
 	
-	console.log(today);
+	// console.log(today);
 	return today;
 }
+
+// date.toISOString
 
 
 var payutcAPI = {
@@ -62,7 +64,7 @@ var payutcAPI = {
 		if (typeof resp.sessionid != "undefined"){
 			this.config.sessionID = JSON.parse(xml.responseText).sessionid;
 			this.logged_usr = JSON.parse(xml.responseText).username;
-			console.info("Logged user successfully: ", this.logged_usr);
+			console.info("Logged user successfully: ", this.config.logged_usr);
 			return resp;
 		}else{
 			throw new Error("Error logging in: " + resp.error.message);
@@ -80,10 +82,18 @@ var payutcAPI = {
 	},
 
 
-	genericApiCall: function(service, method, data) {
+	genericApiCall: function(service, method, data, callback) {
 		this.verifySession();
 		var url = this.config.url + service + "/" + method + "?system_id=" + this.config.systemID + "&sessionid=" + this.config.sessionID + "&app_key=" + this.config.app_key;
 		var xml = new XMLHttpRequest();
+		
+		xml.onreadystatechange = function(){
+			if (xml.readyState == 4 && xml.status == 200){
+				if (typeof callback != 'undefined') callback(xml.responseText);
+				return xml.responseText;
+			}
+		};
+		
 		if (typeof data != "undefined"){
 			xml.open("POST", url, this.config.async);
 			xml.setRequestHeader("Content-type", "application/json");
@@ -92,9 +102,9 @@ var payutcAPI = {
 			xml.open("POST", url, this.config.async);
 			xml.send();
 		}
-		console.log("URL Sent: ", url);
-		console.log("Data sent: ", String(data));
-		console.log("ResponseText: ", xml.responseText);	
+		// console.log("URL Sent: ", url);
+		// console.log("Data sent: ", String(data));
+		// console.log("ResponseText: ", xml.responseText);	
 		return xml.responseText;
 	}
 
@@ -112,17 +122,57 @@ var payutc = {
 	config:{
 		//use to make setter functions
 		//to modify payutcAPI config 
-		
+		setUrl: function (url) {
+			if(typeof url == "undefined") throw new Error("url is required for payutc.config.setUrl");
+			payutcAPI.config.url = url;
+		},
+
+		setUID: function (username, password){
+			if (typeof username == "undefined" || typeof password == "undefined"){
+				throw new Error("(username,password) are required for payutc.config.setUID");
+			}
+			payutcAPI.config.username = username;
+			payutcAPI.config.password = password;
+		},
+
+		setSysId: function(sysId){
+			if (typeof sysId == "undefined"){
+				throw new Error("sysId is required for payutc.config.setSysId");
+			}
+			payutcAPI.config.systemID = sysId;
+		},
+
+		isAsync: function (async){
+			if(typeof async == "undefined"){
+				throw new Error("async is required for payutc.config.isAsync");
+			}
+			payutcAPI.config.async = async;
+		},
+
+
+		setFundation: function(funId){
+			if(typeof funI == "undefined"){
+				throw new Error("funId is required for payutc.config.setFundation");
+			}
+			payutcAPI.config.fun_id = funId;
+		}
+
 	},
 
 	stats: {
-		getNbSell : function(objId){
-			return payutcAPI.genericApiCall("STATS", "getNbSell", {obj_id: objId, fun_id: payutcAPI.config.fun_id});
+		getNbSell : function(objId, funId, start, end, tick){
+
+			return payutcAPI.genericApiCall("STATS", "getNbSell", {obj_id: objId, fun_id: funId, start: start, end: end || timeInSQL()});
 		},
 
-		getRevenue: function(funId, start, end, tick, appId){
+		getRevenue: function(funId, start, end, appId){
+			//exception pour appID
 			//appId , start, end, tick are optional
-			return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: funId, app_id: appId || "0", start: start || "1999-01-01T00:00", end: end || "2060-01-01T00:00", tick: tick || "null"});
+			if (typeof appId != "undefined"){
+				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: funId, app_id: appId, start: start || "1999-01-01T00:00", end: end || "2060-01-01T00:00"});
+			}else{
+				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: funId, start: start || "1999-01-01T00:00", end: end || "2060-01-01T00:00"});
+			}
 		},
 
 
@@ -151,7 +201,7 @@ var payutc = {
 		},
 
 		setCategory: function(name, funId, objId, parentId){
-			//objId and parentId is optional
+			//objId and parentId are optional
 			return payutcAPI.genericApiCall("GESARTICLE", "setCategory", {name: name, parent_id: parentId || "null", fun_id: funId, obj_id: objId || "null"});
 		}, 
 
@@ -212,11 +262,12 @@ var payutc = {
 
 		setProduct: function(name, category, price, stock, alcool, image, funId, objId, tva, cotisant){
 			//objId, tva and cotisant are optional
-			//prix en centimes!!!
+			//objId is only if remaking an article
+			//prix en euros
 			if (alcool == true) alcool = 0;
 			if (alcool == false) alcool =1;
-			return payutcAPI.genericApiCall("GESARTICLE", "setProduct", {name: name, parent: category, prix: price, stock: stock, alcool: alcool, 
-				image: image, fun_id: funId, obj_id: objId || "0", tva: tva || "0.00", cotisant: cotisant || "1"});
+			return payutcAPI.genericApiCall("GESARTICLE", "setProduct", {name: name, parent: category, prix: price*100, stock: stock, alcool: alcool, 
+				image: image, fun_id: funId, obj_id: objId || null, tva: tva || "0.00", cotisant: cotisant || "1"});
 		},
 
 		deleteProduct: function(objId, funId){
@@ -245,5 +296,5 @@ function runTest () {
 	payutc.stats.getRevenue(payutcAPI.config.fun_id, "2015-04-01 10:00:00", timeInSQL());
 	// payutc.articles.getProductsByCategory([payutcAPI.config.fun_id]);
 	// payutc.transfer(1, 10269, "Poulet3000");
-
+	////111-120 (-2)
 }
