@@ -50,7 +50,10 @@ var payutcAPI = {
 		fun_id: 2,
 		sessionID : 0,
 		logged_usr : "",
+		loginMethod : "payuser"
 	},
+
+	checkSession : false,
 
 
 
@@ -71,19 +74,25 @@ var payutcAPI = {
 		}
 	},
 
+	loginCASUser: function(service, ticket){
 
+	},
 
-	verifySession: function() {
+	verifySession: function(service, ticket) {
 		if (this.config.sessionID == 0){
 			console.warn("User not logged, logging...");
-			return this.loginPayutcUser(this.config.username, this.config.password);
+			if (this.config.loginMethod == 'CAS'){
+				return this.loginCASUser()
+			}else if(this.config.loginMethod == 'payuser'){
+				return this.loginPayutcUser(this.config.username, this.config.password);
+			}
 		}
 		console.info("User already logged, session_id is: ", this.config.sessionID);
 	},
 
 
 	genericApiCall: function(service, method, data, callback) {
-		// this.verifySession();
+
 		var url = this.config.url + service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
 		if (this.config.sessionID){
 			url += "&sessionid=" + this.config.sessionID;
@@ -110,7 +119,6 @@ var payutcAPI = {
 		// console.log("ResponseText: ", xml.responseText);	
 		return xml.responseText;
 	}
-
 };
 
 
@@ -119,9 +127,32 @@ var payutcAPI = {
 //and all methods in payutc's api.
 //ex: payutc.stats.getNbSell(obj_id);
 var payutc = {
-	/**********
-	// STATS
-	**********/
+
+	init: function(params){
+		/*params = {
+			endpoint,
+			u_name,
+			p_word,
+			sys_id,
+			fun_id
+		}*/
+		if (typeof params == "undefined" ||
+			typeof params.endpoint == "undefined" ||
+			typeof params.u_name == "undefined" ||
+			typeof params.p_word == "undefined" ||
+			typeof params.sys_id == "undefined" ||
+			typeof params.fun_id == "undefined"
+			){
+			throw new Error("params{}, .endpoint, .u_name, .p_word, .sys_id and .fun_id are required");
+		}
+
+		payutcAPI.config.url = endpoint;
+		payutcAPI.config.username = u_name;
+		payutcAPI.config.password = p_word;
+		payutcAPI.config.systemID = sys_id;
+		payutcAPI.config.fun_id = fun_id;
+	},
+
 	config:{
 		//use to make setter functions
 		//to modify payutcAPI config 
@@ -230,16 +261,21 @@ var payutc = {
 			//vu que getProductsByCategory nexiste plus
 			//et on compare le category_id de l'article avec catId
 			//a eliminer, si ce sont les memes, le produit est elimine
-
-			//solution degueulasse parce que synchrone est tres lente
-			//si on suppose 200 ms pour l'elimination d'un article
-			//on aura 2 sec d'attente pour 10 (ex: bieres bouteille)
+			if (payutcAPI.config.async != false){
+				var change =payutcAPI.config.async;
+				payutcAPI.config.async = false;
+			}
+			// /we make async false so that every product is deleted one by one before the category
 			var prod = this.getProducts([payutcAPI.config.fun_id]);
 			prod = JSON.parse(prod);
 			for (var i =0 ; i< prod.length; i++){
 				if (Number(prod[i].categorie_id) == catId){
 					this.deleteProduct(prod[i].id, payutcAPI.config.fun_id);
 				}
+			}
+
+			if (change){
+				payutcAPI.config.async = change; //in theory = true
 			}
 
 			return payutcAPI.genericApiCall("GESARTICLE", "deleteCategory", {obj_id: catId, fun_id: funId});
@@ -301,7 +337,6 @@ var payutc = {
 			return payutcAPI.genericApiCall("RELOAD", "info");
 		}
 	}
-
 }; 
 
 function runTest () {
