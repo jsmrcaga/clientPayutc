@@ -229,9 +229,13 @@ var payutc = {
 		
 	},
 
-	transfer: function(amount, usr_id, message){
-		return payutcAPI.genericApiCall("TRANSFER", "transfer", {amount: amount, userID: usr_id, message: message});
-	},
+	users: {
+		transfer: function(amount, usr_id, message){
+			// needs CAS auth to retrieve user account
+			// use loginCAS before using transfer, useless in client mode?
+			return payutcAPI.genericApiCall("TRANSFER", "transfer", {amount: amount, userID: usr_id, message: message});
+		},
+	}
 
 
 	/*******************
@@ -253,7 +257,7 @@ var payutc = {
 		setCategory: function(name, funId, objId, parentId){
 			//objId and parentId are optional
 			return payutcAPI.genericApiCall("GESARTICLE", "setCategory", {name: name, parent_id: parentId || "null", fun_id: funId, obj_id: objId || "null"});
-		}, 
+		},
 
 		deleteCategory: function(catId, funId){
 			//on est obliges d'eliminer les articles en cascade
