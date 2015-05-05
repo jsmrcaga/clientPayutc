@@ -42,12 +42,12 @@ function timeInSQL () {
 var payutcAPI = {
 	config: {
 		url : "https://api.nemopay.net/services/",
-		username : "colinajo",
-		password : "Tennis15",
-		systemID : "payutc",
+		username : "uname",
+		password : "pass",
+		systemID : "sys_id",
 		async: false,
 		app_key: "44682eb98b373105b99511d3ddd0034f", 
-		fun_id: 2,
+		fun_id: 2976487465978349,
 		sessionID : 0,
 		logged_usr : "",
 		loginMethod : "payuser"
@@ -141,16 +141,18 @@ var payutc = {
 			typeof params.u_name == "undefined" ||
 			typeof params.p_word == "undefined" ||
 			typeof params.sys_id == "undefined" ||
-			typeof params.fun_id == "undefined"
+			typeof params.fun_id == "undefined" ||
+			typeof params.app_key == "undefined"
 			){
 			throw new Error("params{}, .endpoint, .u_name, .p_word, .sys_id and .fun_id are required");
 		}
 
-		payutcAPI.config.url = endpoint;
-		payutcAPI.config.username = u_name;
-		payutcAPI.config.password = p_word;
-		payutcAPI.config.systemID = sys_id;
-		payutcAPI.config.fun_id = fun_id;
+		payutcAPI.config.url = params.endpoint;
+		payutcAPI.config.username = params.u_name;
+		payutcAPI.config.password = params.p_word;
+		payutcAPI.config.systemID = params.sys_id;
+		payutcAPI.config.fun_id = params.fun_id;
+		payutcAPI.config.app_key = params.app_key;
 	},
 
 	config:{
@@ -206,6 +208,15 @@ var payutc = {
 				payutcAPI.config.logged_usr = resp.username;
 				console.log("Logged user successfully:", payutcAPI.config.logged_usr);
 			}
+		},
+
+		payuser_default: function(){
+			var resp = JSON.parse(payutcAPI.genericApiCall("GESARTICLE", "login2", {login: payutcAPI.config.username, password: payutcAPI.config.password}));
+			if (typeof resp.sessionid != "undefined"){
+				payutcAPI.config.sessionID = resp.sessionid;
+				payutcAPI.config.logged_usr = resp.username;
+				console.log("Logged user successfully:", payutcAPI.config.logged_usr);
+			}
 		}
 	},
 
@@ -235,7 +246,7 @@ var payutc = {
 			// use loginCAS before using transfer, useless in client mode?
 			return payutcAPI.genericApiCall("TRANSFER", "transfer", {amount: amount, userID: usr_id, message: message});
 		},
-	}
+	},
 
 
 	/*******************
