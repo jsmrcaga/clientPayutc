@@ -1,3 +1,5 @@
+require('http');
+
 function timeInSQL () {
 
 	var today = new Date();
@@ -56,7 +58,7 @@ var payutcAPI = {
 	checkSession : false,
 
 
-
+/*
 	loginPayutcUser: function(login, pass) {
 		var params = {login: login, password: pass};
 		var xml = new XMLHttpRequest();
@@ -89,38 +91,47 @@ var payutcAPI = {
 		}
 		console.info("User already logged, session_id is: ", this.config.sessionID);
 	},
-
+*/
 
 	genericApiCall: function(service, method, data, callback) {
-		if (this.config.app_key == 0 && this.config.systemID == "sys_id"){
-			throw new Error("Configuration not set! Use payutc.config.init()");
-		}
 
-		var url = this.config.url + service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
+		var url = service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
 		if (this.config.sessionID){
 			url += "&sessionid=" + this.config.sessionID;
 		}
-		var xml = new XMLHttpRequest();
-		
-		xml.onreadystatechange = function(){
-			if (xml.readyState == 4 && xml.status == 200){
-				if (typeof callback != 'undefined') callback(xml.responseText);
-				return xml.responseText;
-			}
+
+		var options = {
+			hostname: this.config.url,
+			path: url,
+			port: 80,
+			method: 'POST',
 		};
 		
+		var request = http.request(options, function(res){
+			res.setEncoding('utf8');
+			res.on('data', function(chunk){
+				console.log('Body: ' + chunk);
+				return chunk;
+			});
+		});
+
+		request.on('error', function(e){
+			throw new Error("Error whith request: " + e.message);
+		});
+
 		if (typeof data != "undefined"){
-			xml.open("POST", url, this.config.async);
-			xml.setRequestHeader("Content-type", "application/json");
-			xml.send(JSON.stringify(data)); //session_id: this.sessionID
+			options.headers = {
+				'Content-type' : "application/json"
+			};
+
+			request.write(JSON.stringify(data)); //session_id: this.sessionID
+			request.end();
 		}else{
-			xml.open("POST", url, this.config.async);
-			xml.send();
+			request.end()
 		}
 		// console.log("URL Sent: ", url);
 		// console.log("Data sent: ", String(data));
 		// console.log("ResponseText: ", xml.responseText);	
-		return xml.responseText;
 	}
 };
 
@@ -239,15 +250,6 @@ var payutc = {
 			}
 		},
 
-		etOperatorsStats: function(funId, start, end){
-			if (typeof start == "undefined"){
-				return payutcAPI.genericApiCall("STATS", "getOperatorsStats", {fun_id: funId});
-			}else{
-				return payutcAPI.genericApiCall("STATS", "getOperatorsStats", {fun_id: funId, start:start, end: end});
-			}
-		}
-
-	
 
 		
 	},
@@ -265,11 +267,6 @@ var payutc = {
 	// GESTION ARTICLES
 	*******************/
 	articles: {
-
-		getArticles: function(funId){
-			return payutcAPI.genericApiCall("POSS3", "getArticles", {fun_id:funId});
-		},
-
 		getProducts: function(funIdsArray){
 			return payutcAPI.genericApiCall("GESARTICLE", "getProducts", {fun_ids:funIdsArray});			
 		}, 
@@ -320,7 +317,7 @@ var payutc = {
 		getProductsByCategory: function(funIdsArray){
 			// funIds as array
 			var prods = [], cats = [];
-			prod = JSON.parse(this.getArticles(funIdsArray[0]));
+			prod = JSON.parse(this.getProducts(funIdsArray));
 			var categ = JSON.parse(this.getCategories(funIdsArray));
 
 			var resp = [];
@@ -364,21 +361,11 @@ var payutc = {
 	
 	},
 
-	treso: { //a revoir
-
-		getDetails: function(funId, start, end){
-			return payutcAPI.genericApiCall("TRESO", "getDetails", {fun_id:funId, start: start || null, end: end || null});
-		},
-
-		//getvendeur 
-	},
-
 	reload: {
 		info:function(){
 			return payutcAPI.genericApiCall("RELOAD", "info");
 		}
-	},
-
+	}
 }; 
 
 function runTest () {
@@ -394,7 +381,3 @@ function runTest () {
 	// payutc.transfer(1, 10269, "Poulet3000");
 	////111-120 (-2)
 }
-
-//treso.getdetails(fun_id, start, end, )
-// .toISOString
-//24 terminaux pour esu parking
