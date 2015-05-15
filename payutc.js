@@ -140,21 +140,21 @@ var payutc = {
 			fun_id
 		}*/
 		if (typeof params == "undefined" ||
-			typeof params.endpoint == "undefined" ||
-			typeof params.u_name == "undefined" ||
-			typeof params.p_word == "undefined" ||
-			typeof params.sys_id == "undefined" ||
-			typeof params.fun_id == "undefined" ||
+			// typeof params.endpoint == "undefined" ||
+			// typeof params.u_name == "undefined" ||
+			// typeof params.p_word == "undefined" ||
+			// typeof params.sys_id == "undefined" ||
+			// typeof params.fun_id == "undefined" ||
 			typeof params.app_key == "undefined"
 			){
 			throw new Error("params{}, .endpoint, .u_name, .p_word, .sys_id and .fun_id are required");
 		}
 
-		payutcAPI.config.url = params.endpoint;
-		payutcAPI.config.username = params.u_name;
-		payutcAPI.config.password = params.p_word;
-		payutcAPI.config.systemID = params.sys_id;
-		payutcAPI.config.fun_id = params.fun_id;
+		payutcAPI.config.url = params.endpoint || null;
+		payutcAPI.config.username = params.u_name || null;
+		payutcAPI.config.password = params.p_word || null;
+		payutcAPI.config.systemID = params.sys_id || null;
+		payutcAPI.config.fun_id = params.fun_id || null;
 		payutcAPI.config.app_key = params.app_key;
 	},
 
@@ -239,7 +239,7 @@ var payutc = {
 			}
 		},
 
-		etOperatorsStats: function(funId, start, end){
+		getOperatorsStats: function(funId, start, end){
 			if (typeof start == "undefined"){
 				return payutcAPI.genericApiCall("STATS", "getOperatorsStats", {fun_id: funId});
 			}else{
@@ -343,7 +343,8 @@ var payutc = {
 				}
 			}
 
-			return resp;
+			return JSON.stringify(resp);
+			//we stringify because of integrity of code
 
 		},
 
