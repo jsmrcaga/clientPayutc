@@ -1,4 +1,4 @@
-require('http');
+var http = require('https');
 
 function timeInSQL () {
 
@@ -43,7 +43,7 @@ function timeInSQL () {
 
 var payutcAPI = {
 	config: {
-		url : "https://api.nemopay.net/services/",
+		url : "api.nemopay.net",
 		username : "colinajo",
 		password : "Tennis15",
 		systemID : "payutc",
@@ -95,7 +95,8 @@ var payutcAPI = {
 
 	genericApiCall: function(service, method, data, callback) {
 
-		var url = service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
+		console.warn("genericApiCall Data Received: ", data);
+		var url = "/services/" + service + "/" + method + "?system_id=" + this.config.systemID  + "&app_key=" + this.config.app_key;
 		if (this.config.sessionID){
 			url += "&sessionid=" + this.config.sessionID;
 		}
@@ -103,20 +104,24 @@ var payutcAPI = {
 		var options = {
 			hostname: this.config.url,
 			path: url,
-			port: 80,
 			method: 'POST',
+			headers: {
+				'Content-type': "application/json"
+			}
 		};
 		
 		var request = http.request(options, function(res){
 			res.setEncoding('utf8');
 			res.on('data', function(chunk){
 				console.log('Body: ' + chunk);
+				callback(chunk);
 				return chunk;
 			});
 		});
 
 		request.on('error', function(e){
-			throw new Error("Error whith request: " + e.message);
+			// throw new Error("Error whith request: " + e.message);
+			console.warn("Error with request: ", e);
 		});
 
 		if (typeof data != "undefined"){
@@ -158,7 +163,7 @@ var payutc = {
 			typeof params.fun_id == "undefined" ||
 			typeof params.app_key == "undefined"
 			){
-			throw new Error("params{}, .endpoint, .u_name, .p_word, .sys_id and .fun_id are required");
+			// throw new Error("params{}, .endpoint, .u_name, .p_word, .sys_id and .fun_id are required");
 		}
 
 		payutcAPI.config.url = params.endpoint;
@@ -210,22 +215,30 @@ var payutc = {
 	},
 
 	login: {
-		cas: function(service, ticket){
-			return payutcAPI.genericApiCall("GESARTICLE", "loginCas", {service: service, ticket:ticket});
+		cas: function(params){
+			// var params = {service, ticket}
+			return payutcAPI.genericApiCall("GESARTICLE", "loginCas", {service: params.service, ticket: params.ticket}, params.callback);
 		},
 
-		payuser: function(login, password){
+		payuser: function(params){
+			// var params = {login, password}
+			payutcAPI.genericApiCall("GESARTICLE", "login2", {login: params.login, password: params.password}, function(data){
 
-			var resp = JSON.parse(payutcAPI.genericApiCall("GESARTICLE", "login2", {login: login, password: password}));
-			if (typeof resp.sessionid != "undefined"){
-				payutcAPI.config.sessionID = resp.sessionid;
-				payutcAPI.config.logged_usr = resp.username;
-				console.log("Logged user successfully:", payutcAPI.config.logged_usr);
-			}
+				var resp = JSON.parse(data);
+
+				if (typeof resp.sessionid != "undefined"){
+					payutcAPI.config.sessionID = resp.sessionid;
+					payutcAPI.config.logged_usr = resp.username;
+					console.log("Logged user successfully:", payutcAPI.config.logged_usr);
+				}
+				
+				params.callback(JSON.stringify(data));
+			});
+
 		},
 
 		payuser_default: function(){
-			var resp = JSON.parse(payutcAPI.genericApiCall("GESARTICLE", "login2", {login: payutcAPI.config.username, password: payutcAPI.config.password}));
+			var resp = JSON.parse(payutcAPI.genericApiCall("GESARTICLE", "login2", {login: payutcAPI.config.username, password: payutcAPI.config.password},params.callback));
 			if (typeof resp.sessionid != "undefined"){
 				payutcAPI.config.sessionID = resp.sessionid;
 				payutcAPI.config.logged_usr = resp.username;
@@ -235,18 +248,20 @@ var payutc = {
 	},
 
 	stats: {
-		getNbSell : function(objId, funId, start, end, tick){
-
-			return payutcAPI.genericApiCall("STATS", "getNbSell", {obj_id: objId, fun_id: funId, start: start, end: end || timeInSQL()});
+		getNbSell : function(params){
+			// var params = {objId, funId, start, end, tick};
+			return payutcAPI.genericApiCall("STATS", "getNbSell", {obj_id: params.objId, fun_id: params.funId, start: params.start, end: params.end || timeInSQL()},params.callback);
 		},
 
-		getRevenue: function(funId, start, end, appId){
+		getRevenue: function(params){
+			// var params = {funId, start, end, appId};
+
 			//exception pour appID
 			//appId , start, end, tick are optional
 			if (typeof appId != "undefined"){
-				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: funId, app_id: appId, start: start || "1999-01-01T00:00", end: end || "2060-01-01T00:00"});
+				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: params.funId, app_id: params.appId, start: params.start || "1999-01-01T00:00", end: params.end || "2060-01-01T00:00"}, params.callback);
 			}else{
-				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: funId, start: start || "1999-01-01T00:00", end: end || "2060-01-01T00:00"});
+				return payutcAPI.genericApiCall("STATS", "getRevenue", {fun_id: params.funId, start: params.start || "1999-01-01T00:00", end: params.end || "2060-01-01T00:00"}, params.callback);
 			}
 		},
 
@@ -255,10 +270,12 @@ var payutc = {
 	},
 
 	users: {
-		transfer: function(amount, usr_id, message){
+		transfer: function(params){
+			// var params = {amount, usr_id, message};
+
 			// needs CAS auth to retrieve user account
 			// use loginCAS before using transfer, useless in client mode?
-			return payutcAPI.genericApiCall("TRANSFER", "transfer", {amount: amount, userID: usr_id, message: message});
+			return payutcAPI.genericApiCall("TRANSFER", "transfer", {amount: params.amount, userID: params.usr_id, message: params.message},params.callback);
 		},
 	},
 
@@ -267,24 +284,34 @@ var payutc = {
 	// GESTION ARTICLES
 	*******************/
 	articles: {
-		getProducts: function(funIdsArray){
-			return payutcAPI.genericApiCall("GESARTICLE", "getProducts", {fun_ids:funIdsArray});			
+		getProducts: function(params){
+			// var params = {funIdsArray};
+
+			return payutcAPI.genericApiCall("GESARTICLE", "getProducts", {fun_ids:params.funIdsArray},params.callback);			
 		}, 
 
-		getCategories: function(funIdsArray){
-			return payutcAPI.genericApiCall("GESARTICLE", "getCategories", {fun_ids: funIdsArray});
+		getCategories: function(params){
+			// var params = {funIdsArray};
+
+			return payutcAPI.genericApiCall("GESARTICLE", "getCategories", {fun_ids: params.funIdsArray},params.callback);
 		},
 
-		getCategory: function(catId, funId){
-			return payutcAPI.genericApiCall("GESARTICLE", "getCategory", {fun_id: funId, obj_id: catId});
+		getCategory: function(params){
+			// var params = {catId, funId};
+
+			return payutcAPI.genericApiCall("GESARTICLE", "getCategory", {fun_id: params.funId, obj_id: params.catId},params.callback);
 		},
 
-		setCategory: function(name, funId, objId, parentId){
+		setCategory: function(params){
+			// var params = {name, funId, objId, parentId};
+
 			//objId and parentId are optional
-			return payutcAPI.genericApiCall("GESARTICLE", "setCategory", {name: name, parent_id: parentId || "null", fun_id: funId, obj_id: objId || "null"});
+			return payutcAPI.genericApiCall("GESARTICLE", "setCategory", {name: params.name, parent_id: params.parentId || "null", fun_id: params.funId, obj_id: params.objId || "null"},params.callback);
 		},
 
-		deleteCategory: function(catId, funId){
+		deleteCategory: function(params){
+			// var params = {catId, funId};
+
 			//on est obliges d'eliminer les articles en cascade
 			//pour cela on recup tous les articles de la fun 
 			//vu que getProductsByCategory nexiste plus
@@ -307,55 +334,73 @@ var payutc = {
 				payutcAPI.config.async = change; //in theory = true
 			}
 
-			return payutcAPI.genericApiCall("GESARTICLE", "deleteCategory", {obj_id: catId, fun_id: funId});
+			return payutcAPI.genericApiCall("GESARTICLE", "deleteCategory", {obj_id: params.catId, fun_id: params.funId},params.callback);
 		},
 
-		getProduct : function(objId, funId){
-			return payutcAPI.genericApiCall("GESARTICLE", "getProduct", {obj_id: objId, fun_id: funId || "null"});
+		getProduct : function(params){
+			// var params = {objId, funId};
+
+			return payutcAPI.genericApiCall("GESARTICLE", "getProduct", {obj_id: params.objId, fun_id: params.funId || "null"},params.callback);
 		},
 
-		getProductsByCategory: function(funIdsArray){
+		getProductsByCategory: function(params){
+			// var params = {funIdsArray};
+
 			// funIds as array
 			var prods = [], cats = [];
-			prod = JSON.parse(this.getProducts(funIdsArray));
-			var categ = JSON.parse(this.getCategories(funIdsArray));
+			this.getProducts({funIdsArray: params.funIdsArray[0], callback: function(dataProds){
+				var prod = JSON.parse(dataProds);
 
-			var resp = [];
+				this.getCategories({funIdsArray: params.funIdsArray, callback: function(dataCateg){
 
-			
+					var categ = JSON.parse(dataCateg);
 
-			for (var i = 0; i < categ.length; i++){
-				resp[i] = {
-					name: categ[i].name,
-					id: categ[i].id,
-					products: [],
-				};
-			}
+					var resp = [];
 
-			for (var i =0 ; i< prod.length; i++){
-				for (var j=0; j<resp.length; j++){
-					if (prod[i].categorie_id == resp[j].id){
-						resp[j].products.push(prod[i]);
+					
+
+					for (var i = 0; i < categ.length; i++){
+						resp[i] = {
+							name: categ[i].name,
+							id: categ[i].id,
+							products: [],
+						};
 					}
-				}
-			}
 
-			return resp;
+					for (var i =0 ; i< prod.length; i++){
+						for (var j=0; j<resp.length; j++){
+							if (prod[i].categorie_id == resp[j].id){
+								resp[j].products.push(prod[i]);
+							}
+						}
+					}
+
+					params.callback(resp);
+					return resp;
+				}});
+
+				
+			}});
+
 
 		},
 
-		setProduct: function(name, category, price, stock, alcool, image, funId, objId, tva, cotisant){
+		setProduct: function(params){
+			// var params = {name, category, price, stock, alcool, image, funId, objId, tva, cotisant};
+
 			//objId, tva and cotisant are optional
 			//objId is only if remaking an article
 			//prix en euros
 			if (alcool == true) alcool = 0;
 			if (alcool == false) alcool =1;
-			return payutcAPI.genericApiCall("GESARTICLE", "setProduct", {name: name, parent: category, prix: price*100, stock: stock, alcool: alcool, 
-				image: image, fun_id: funId, obj_id: objId || null, tva: tva || "0.00", cotisant: cotisant || "1"});
+			return payutcAPI.genericApiCall("GESARTICLE", "setProduct", {name: params.name, parent: params.category, prix: params.price*100, stock: params.stock, alcool: params.alcool, 
+				image: params.image, fun_id: params.funId, obj_id: params.objId || null, tva: params.tva || "0.00", cotisant: params.cotisant || "1"},params.callback);
 		},
 
-		deleteProduct: function(objId, funId){
-			return payutcAPI.genericApiCall("GESARTICLE", "deleteProduct",{obj_id: objId, fun_id: funId});
+		deleteProduct: function(params){
+			// var params = {objId, funId};
+
+			return payutcAPI.genericApiCall("GESARTICLE", "deleteProduct",{obj_id: params.objId, fun_id: params.funId},params.callback);
 		}, 
 
 	
@@ -366,18 +411,20 @@ var payutc = {
 			return payutcAPI.genericApiCall("RELOAD", "info");
 		}
 	}
-}; 
+};
 
 function runTest () {
-	// payutc.articles.getProducts([payutcAPI.config.fun_id]); //retour en tableau
+	// payutc.login.payuser({login: "colinajo", password: "Tennis15", callback: then});
+	// retour en tableau
 	// payutc.stats.getNbSell(32);
 	// payutc.articles.getCategories([payutcAPI.config.fun_id]);
 	// payutc.articles.getCategory(8, payutcAPI.config.fun_id);
 	// var cat = payutc.articles.setCategory("Categorie de Jo", payutcAPI.config.fun_id);
 	// payutc.articles.setProduct("Produit de Jo", JSON.parse(cat).success, 345, 100, false, 0, payutcAPI.config.fun_id);
 	// payutc.articles.deleteCategory(3657,2);
-	payutc.stats.getRevenue(payutcAPI.config.fun_id, "2015-04-01 10:00:00", timeInSQL());
+	// payutc.stats.getRevenue(payutcAPI.config.fun_id, "2015-04-01 10:00:00", timeInSQL());
 	// payutc.articles.getProductsByCategory([payutcAPI.config.fun_id]);
 	// payutc.transfer(1, 10269, "Poulet3000");
-	////111-120 (-2)
 }
+
+
