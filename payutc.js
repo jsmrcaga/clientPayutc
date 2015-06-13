@@ -194,6 +194,13 @@ var payutc = {
 				throw new Error("funId is required for payutc.config.setFundation");
 			}
 			payutcAPI.config.fun_id = funId;
+		},
+
+		setAppKey : function(appKey){
+			if (typeof appKey == "undefined"){
+				throw new Error("AppKey is required");
+			}
+			payutcAPI.config.app_key = appKey;
 		}
 
 	},
@@ -210,7 +217,11 @@ var payutc = {
 				payutcAPI.config.sessionID = resp.sessionid;
 				payutcAPI.config.logged_usr = resp.username;
 				console.log("Logged user successfully:", payutcAPI.config.logged_usr);
+				return 1;
 			}
+
+			return -1;
+
 		},
 
 		payuser_default: function(){
