@@ -67,12 +67,12 @@ var payutc = (function(){
 	var payutcAPI = {
 		config: {
 			url : "https://api.nemopay.net/services/",
-			username : "colinajo",
-			password : "Tennis15",
+			username : "yourID",
+			password : "yourPSWD",
 			systemID : "payutc",
 			async: false,
-			app_key: "44682eb98b373105b99511d3ddd0034f", 
-			fun_id: 2,
+			app_key: "yourapplicationkey", 
+			fun_id: 34752342,
 			sessionID : 0,
 			logged_usr : "",
 			loginMethod : "payuser"
