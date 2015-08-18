@@ -68,12 +68,12 @@ function timeInSQL () {
 var payutcAPI = {
 	config: {
 		url : "api.nemopay.net",
-		username : "colinajo",
-		password : "Tennis15",
+		username : "yourUSRN",
+		password : "yourPSWD",
 		systemID : "payutc",
 		async: false,
-		app_key: "44682eb98b373105b99511d3ddd0034f", 
-		fun_id: 2,
+		app_key: "yourSuperAppKey", 
+		fun_id: 23846739922,
 		sessionID : 0,
 		logged_usr : "",
 		loginMethod : "payuser"
