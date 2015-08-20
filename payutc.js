@@ -201,7 +201,7 @@ var payutc = (function(){
 
 		/**
 		* The config object containing all config related methods.
-		* @member
+		* @function
 		*/
 		config:{
 			/**
