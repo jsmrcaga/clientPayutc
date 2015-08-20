@@ -154,8 +154,29 @@ var payutc = (function(){
 	//This is the object that will contain all services
 	//and all methods in payutc's api.
 	//ex: payutc.stats.getNbSell(obj_id);
+
+	/**
+	 * Construct payutc object.
+	 * @class This is the payutc class.
+	 * It is a singleton defined as an object literal, 
+	 * although it can be copied.
+	 * @constructor
+	*/
 	var payutc = {
 
+		/**
+		 * This function allows the user to change the configuration
+		 * object to their liking. <code>payutc.login(params)</code>
+		 * allows for a simple and fast configuration.
+		 * @param {object} params - An object containing the properties 
+		 * needed for the <code>config</code> object. 
+		 * @param {string} params.endpoint - The URL where the API is located
+		 * @param {string} params.u_name - The username to use with <code>payuser_default</code>
+		 * @param {string} params.p_word - The password to use with <code>payuser_default</code>
+		 * @param {string} params.sys_id - The system ID, normally <code>payutc</code>
+		 * @param {integer} params.fun_id - The fundation ID to use with all requests. If
+		 * in need to change see <code>config.setFundation</code>
+		*/
 		init: function(params){
 			/*params = {
 				endpoint,
@@ -183,14 +204,25 @@ var payutc = (function(){
 			payutcAPI.config.app_key = params.app_key;
 		},
 
+		/**
+		* The config object containing all config related methods.
+		* @constructor
+		*/
 		config:{
-			//use to make setter functions
-			//to modify payutcAPI config 
-			setUrl: function (url) {
-				if(typeof url == "undefined") throw new Error("url is required for payutc.config.setUrl");
+			/**
+			* Used to set the endpoint in the configuration object.
+			* @param {string} url - the Endpoint to be used in all requests.
+			*/ 
+			setEndpoint: function (url) {
+				if(typeof url == "undefined") throw new Error("url is required for payutc.config.setEndpoint");
 				payutcAPI.config.url = url;
 			},
 
+			/**
+			* Used to set the IDs in the configuration obejct.
+			* @param {string} username - your payuser username
+			* @param {string} password - your payuser password
+			*/
 			setUID: function (username, password){
 				if (typeof username == "undefined" || typeof password == "undefined"){
 					throw new Error("(username,password) are required for payutc.config.setUID");
@@ -199,6 +231,10 @@ var payutc = (function(){
 				payutcAPI.config.password = password;
 			},
 
+			/**
+			* Used to set the system ID, normally <code>payutc</code>
+			* @param {string} sysId - the system ID
+			*/
 			setSysId: function(sysId){
 				if (typeof sysId == "undefined"){
 					throw new Error("sysId is required for payutc.config.setSysId");
@@ -206,6 +242,11 @@ var payutc = (function(){
 				payutcAPI.config.systemID = sysId;
 			},
 
+			/**
+			* Used to set if the whole <code>payutc</code> API calls will be sync or async
+			* For the moment useless, as async is not yet supported
+			* @param {bool} async - async or not (duh?)
+			*/
 			isAsync: function (async){
 				if(typeof async == "undefined"){
 					throw new Error("async is required for payutc.config.isAsync");
@@ -214,6 +255,10 @@ var payutc = (function(){
 			},
 
 
+			/**
+			* Used to set the fundation ID in the configuration object
+			* @param {integer} funId - The fundation ID for all requests
+			*/
 			setFundation: function(funId){
 				if(typeof funI == "undefined"){
 					throw new Error("funId is required for payutc.config.setFundation");
@@ -221,6 +266,10 @@ var payutc = (function(){
 				payutcAPI.config.fun_id = funId;
 			},
 
+			/**
+			* Used to set the application key in the configuration object
+			* @params {integer} appKey - the application key for all requests
+			*/
 			setAppKey : function(appKey){
 				if (typeof appKey == "undefined"){
 					throw new Error("AppKey is required");
@@ -230,6 +279,10 @@ var payutc = (function(){
 
 		},
 
+		/**
+		* The <code>login</code> object, containing the login related methods
+		* @constructor
+		*/
 		login: {
 			cas: function(service, ticket){
 				return payutcAPI.genericApiCall("GESARTICLE", "loginCas", {service: service, ticket:ticket});
