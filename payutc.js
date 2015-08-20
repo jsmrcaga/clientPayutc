@@ -26,7 +26,7 @@
 /**
 * @file The official documentation for <code>payutc.js</code>. This documentation serves both the 
 * <strong>client</strong> and <strong>server</strong> libraries. </br>
-* It is worth noting that all functions in <strong>server</server> require a <code>params</code> object as
+* It is worth noting that all functions in <strong>server</strong> require a <code>params</code> object as
 * argument. This <code>params</code> object will contain every argument that the client library needed.</br>
 * <i>Example:</i> If using <code>payutc.login.payuser(username, password)</code>, you will need to pass: 
 * <strong><code>payutc.login.payuser({username: "usrnm", password: "pswrd", callback: callbackFunction})</code></strong>
