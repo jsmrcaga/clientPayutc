@@ -30,7 +30,7 @@
  * although it can be copied.
 */
 var payutc = (function(){
-
+	/** @lends payutc.prototype*/
 	function timeInSQL () {
 
 		var today = new Date();
@@ -157,7 +157,6 @@ var payutc = (function(){
 
 	
 	var payutc = {
-		/** @lends payutc.prototype*/
 
 		/**
 		 * This function allows the user to change the configuration
