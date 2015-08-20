@@ -23,6 +23,12 @@
 // THE SOFTWARE.
 // *****************************************************************************
 
+/**
+ * Construct payutc object.
+ * @class This is the payutc class.</br>
+ * It is a singleton defined as an object literal, 
+ * although it can be copied.
+*/
 var payutc = (function(){
 
 	function timeInSQL () {
@@ -149,26 +155,15 @@ var payutc = (function(){
 		}
 	};
 
-
-
-	//This is the object that will contain all services
-	//and all methods in payutc's api.
-	//ex: payutc.stats.getNbSell(obj_id);
-
-	/**
-	 * Construct payutc object.
-	 * @class This is the payutc class.
-	 * It is a singleton defined as an object literal, 
-	 * although it can be copied.
-	 * @constructor
-	*/
+	
 	var payutc = {
+		/** @lends payutc.prototype*/
 
 		/**
 		 * This function allows the user to change the configuration
 		 * object to their liking. <code>payutc.login(params)</code>
 		 * allows for a simple and fast configuration.
-		 * @param {object} params - An object containing the properties 
+		 * @param {Object} params - An object containing the properties 
 		 * needed for the <code>config</code> object. 
 		 * @param {string} params.endpoint - The URL where the API is located
 		 * @param {string} params.u_name - The username to use with <code>payuser_default</code>
@@ -243,7 +238,7 @@ var payutc = (function(){
 			},
 
 			/**
-			* Used to set if the whole <code>payutc</code> API calls will be sync or async
+			* Used to set if the whole <code>payutc</code> API calls will be sync or async.</br>
 			* For the moment useless, as async is not yet supported
 			* @param {bool} async - async or not (duh?)
 			*/
@@ -268,7 +263,7 @@ var payutc = (function(){
 
 			/**
 			* Used to set the application key in the configuration object
-			* @params {integer} appKey - the application key for all requests
+			* @param {integer} appKey - the application key for all requests
 			*/
 			setAppKey : function(appKey){
 				if (typeof appKey == "undefined"){
