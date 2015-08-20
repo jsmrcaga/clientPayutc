@@ -23,7 +23,15 @@
 // THE SOFTWARE.
 // *****************************************************************************
 
-
+/**
+* @file The official documentation for <code>payutc.js</code>. This documentation serves both the 
+* <strong>client</strong> and <strong>server</strong> libraries. </br>
+* It is worth noting that all functions in <strong>server</server> require a <code>params</code> object as
+* argument. This <code>params</code> object will contain every argument that the client library needed.</br>
+* <i>Example:</i> If using <code>payutc.login.payuser(username, password)</code>, you will need to pass: 
+* <strong><code>payutc.login.payuser({username: "usrnm", password: "pswrd", callback: callbackFunction})</code></strong>
+* @author Jo Colina @jsmrcaga
+*/
 var payutc = (function(){
 	/** @lends payutc.prototype*/
 	function timeInSQL () {
@@ -155,7 +163,8 @@ var payutc = (function(){
 	 * Construct payutc object.
 	 * It is a singleton defined as an object literal, 
 	 * although it can be copied.
-	 * @namespace payutc 
+	 * @namespace payutc
+	 * @global
 	*/
 	var payutc = {
 
