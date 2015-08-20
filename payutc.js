@@ -23,12 +23,7 @@
 // THE SOFTWARE.
 // *****************************************************************************
 
-/**
- * Construct payutc object.
- * @class This is the payutc class.</br>
- * It is a singleton defined as an object literal, 
- * although it can be copied.
-*/
+
 var payutc = (function(){
 	/** @lends payutc.prototype*/
 	function timeInSQL () {
@@ -155,13 +150,20 @@ var payutc = (function(){
 		}
 	};
 
-	
+	/**
+	 * @namespace payutc 
+	 * This is the payutc class.</br>
+	 * Construct payutc object.
+	 * It is a singleton defined as an object literal, 
+	 * although it can be copied.
+	*/
 	var payutc = {
 
 		/**
 		 * This function allows the user to change the configuration
 		 * object to their liking. <code>payutc.login(params)</code>
 		 * allows for a simple and fast configuration.
+		 * @memberof payutc
 		 * @param {Object} params - An object containing the properties 
 		 * needed for the <code>config</code> object. 
 		 * @param {string} params.endpoint - The URL where the API is located
@@ -200,7 +202,8 @@ var payutc = (function(){
 
 		/**
 		* The config object containing all config related methods.
-		* @class
+		* @namespace payutc.config
+		* @memberof payutc
 		*/
 		config:{
 			/**
