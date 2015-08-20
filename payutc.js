@@ -209,8 +209,9 @@ var payutc = (function(){
 		config:{
 			/**
 			* Used to set the endpoint in the configuration object.
+			* @function setEndpoint
 			* @param {string} url - the Endpoint to be used in all requests.
-			* @memberof config
+			* @memberof payutc.config
 			*/ 
 			setEndpoint: function (url) {
 				if(typeof url == "undefined") throw new Error("url is required for payutc.config.setEndpoint");
@@ -280,7 +281,8 @@ var payutc = (function(){
 
 		/**
 		* The <code>login</code> object, containing the login related methods
-		* @constructor
+		* @namespace payutc.login
+		* @memberof payutc
 		*/
 		login: {
 			cas: function(service, ticket){
