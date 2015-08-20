@@ -200,7 +200,7 @@ var payutc = (function(){
 
 		/**
 		* The config object containing all config related methods.
-		* @function
+		* @inner
 		*/
 		config:{
 			/**
