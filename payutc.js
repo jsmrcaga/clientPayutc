@@ -210,6 +210,7 @@ var payutc = (function(){
 			/**
 			* Used to set the endpoint in the configuration object.
 			* @param {string} url - the Endpoint to be used in all requests.
+			* @memberof config
 			*/ 
 			setEndpoint: function (url) {
 				if(typeof url == "undefined") throw new Error("url is required for payutc.config.setEndpoint");
